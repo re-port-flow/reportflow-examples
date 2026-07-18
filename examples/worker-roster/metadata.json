@@ -1,0 +1,17 @@
+{
+  "reportType": "worker-roster",
+  "title": "労働者名簿",
+  "category": "hr",
+  "templateSlug": "01K1X116H10VNP0GD5684VDB3Y",
+  "templateGalleryUrl": "https://templates.re-port-flow.com/templates/01K1X116H10VNP0GD5684VDB3Y",
+  "sourceDesignId": "0eP3LhG2UwC7ZebE",
+  "sourceDesignVersion": 1,
+  "apiVersion": "v1",
+  "apiEndpoint": "POST /v1/file/sync/single",
+  "envKeys": ["WORKER_ROSTER_DESIGN_ID", "WORKER_ROSTER_DESIGN_VERSION"],
+  "verificationPoints": ["\u5927\u91cf\u884c", "\u30c6\u30fc\u30d6\u30eb\u6539\u30da\u30fc\u30b8", "\u30d8\u30c3\u30c0\u884c\u306e\u7e70\u308a\u8fd4\u3057", "\u65e5\u672c\u8a9e\u8868\u793a"],
+  "expectedPages": 2,
+  "lastVerifiedAt": null,
+  "verifiedEnvironment": null,
+  "notes": "input.json の params キーは、複製したテンプレートのパラメータ定義に合わせてください（GET /v1/file/design/parameter/{designId}?version= で取得可能）。"
+}

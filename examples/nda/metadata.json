@@ -1,0 +1,17 @@
+{
+  "reportType": "nda",
+  "title": "秘密保持誓約書",
+  "category": "legal",
+  "templateSlug": "01KD4H4ERAJVC2EJD66JRN55W2",
+  "templateGalleryUrl": "https://templates.re-port-flow.com/templates/01KD4H4ERAJVC2EJD66JRN55W2",
+  "sourceDesignId": "0eO7ScC3XmMTVF68",
+  "sourceDesignVersion": 1,
+  "apiVersion": "v1",
+  "apiEndpoint": "POST /v1/file/sync/single",
+  "envKeys": ["NDA_DESIGN_ID", "NDA_DESIGN_VERSION"],
+  "verificationPoints": ["\u9577\u6587", "\u8907\u6570\u6761\u9805", "\u6539\u30da\u30fc\u30b8", "\u5dee\u8fbc(\u6c0f\u540d\u30fb\u65e5\u4ed8)"],
+  "expectedPages": 2,
+  "lastVerifiedAt": null,
+  "verifiedEnvironment": null,
+  "notes": "input.json の params キーは、複製したテンプレートのパラメータ定義に合わせてください（GET /v1/file/design/parameter/{designId}?version= で取得可能）。"
+}

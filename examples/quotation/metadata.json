@@ -1,0 +1,17 @@
+{
+  "reportType": "quotation",
+  "title": "見積もり",
+  "category": "sales_transactions",
+  "templateSlug": "0eUPHHS3Iejd8Smr",
+  "templateGalleryUrl": "https://templates.re-port-flow.com/templates/0eUPHHS3Iejd8Smr",
+  "sourceDesignId": "0eUDfTW8qTOQLeVH",
+  "sourceDesignVersion": 1,
+  "apiVersion": "v1",
+  "apiEndpoint": "POST /v1/file/sync/single",
+  "envKeys": ["QUOTATION_DESIGN_ID", "QUOTATION_DESIGN_VERSION"],
+  "verificationPoints": ["\u5c0f\u8a08\u30fb\u6d88\u8cbb\u7a0e\u30fb\u5408\u8a08", "\u6709\u52b9\u671f\u9650", "\u5099\u8003\u306e\u9577\u6587", "\u65e5\u672c\u8a9e\u8868\u793a"],
+  "expectedPages": 1,
+  "lastVerifiedAt": null,
+  "verifiedEnvironment": null,
+  "notes": "input.json の params キーは、複製したテンプレートのパラメータ定義に合わせてください（GET /v1/file/design/parameter/{designId}?version= で取得可能）。"
+}

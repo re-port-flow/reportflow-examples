@@ -1,0 +1,28 @@
+{
+  "invoiceNumber": "INV-2026-0107",
+  "issueDate": "2026-07-15",
+  "dueDate": "2026-08-14",
+  "currency": "USD",
+  "seller": {
+    "name": "Sample Trading Co., Ltd.",
+    "address": "5F Sample Bldg, 1-1-1 Chiyoda, Chiyoda-ku, Tokyo 100-0001, Japan",
+    "email": "billing@example.com",
+    "tel": "+81-3-1234-5678"
+  },
+  "billTo": {
+    "name": "Acme Sample Inc.",
+    "address": "123 Example Street, Suite 400, San Francisco, CA 94105, USA",
+    "attention": "Accounts Payable"
+  },
+  "items": [
+    { "description": "Website design & development", "quantity": 1, "unitPrice": 3200.00, "amount": 3200.00 },
+    { "description": "Monthly maintenance (Jul-Dec 2026)", "quantity": 6, "unitPrice": 150.00, "amount": 900.00 },
+    { "description": "Stock photography license", "quantity": 12, "unitPrice": 12.50, "amount": 150.00 }
+  ],
+  "subtotal": 4250.00,
+  "taxRate": 0,
+  "taxTotal": 0.00,
+  "total": 4250.00,
+  "notes": "Payment is due within 30 days of the invoice date. Please remit by bank transfer to the account below.",
+  "bankInfo": "Sample Bank, Umeda Branch / SWIFT: SMPLJPJT / Account: 1234567 (Sample Trading Co., Ltd.)"
+}

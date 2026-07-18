@@ -1,0 +1,17 @@
+{
+  "reportType": "invoice",
+  "title": "請求書",
+  "category": "sales_transactions",
+  "templateSlug": "0eUPGyiGX8uzwE8L",
+  "templateGalleryUrl": "https://templates.re-port-flow.com/templates/0eUPGyiGX8uzwE8L",
+  "sourceDesignId": "0eUDdgAjNXrrItA2",
+  "sourceDesignVersion": 1,
+  "apiVersion": "v1",
+  "apiEndpoint": "POST /v1/file/sync/single",
+  "envKeys": ["INVOICE_DESIGN_ID", "INVOICE_DESIGN_VERSION"],
+  "verificationPoints": ["複数明細", "消費税10%/8%混在", "端数処理", "日本語表示"],
+  "expectedPages": 1,
+  "lastVerifiedAt": null,
+  "verifiedEnvironment": null,
+  "notes": "input.json の params キーは、複製したテンプレートのパラメータ定義に合わせてください（GET /v1/file/design/parameter/{designId}?version= で取得可能）。"
+}

@@ -1,0 +1,17 @@
+{
+  "reportType": "invoice-en",
+  "title": "Invoice (English)",
+  "category": "sales_transactions",
+  "templateSlug": "0ePwL7h5iCcDd8cM",
+  "templateGalleryUrl": "https://templates.re-port-flow.com/templates/0ePwL7h5iCcDd8cM",
+  "sourceDesignId": "0ePoMHOP7D6g4p4x",
+  "sourceDesignVersion": 1,
+  "apiVersion": "v1",
+  "apiEndpoint": "POST /v1/file/sync/single",
+  "envKeys": ["INVOICE_EN_DESIGN_ID", "INVOICE_EN_DESIGN_VERSION"],
+  "verificationPoints": ["\u82f1\u6570\u5b57\u8868\u793a", "\u901a\u8ca8(USD)\u30d5\u30a9\u30fc\u30de\u30c3\u30c8", "\u65e5\u82f1\u6df7\u5728", "\u5c0f\u6570\u70b9\u4ee5\u4e0b2\u6841"],
+  "expectedPages": 1,
+  "lastVerifiedAt": null,
+  "verifiedEnvironment": null,
+  "notes": "input.json の params キーは、複製したテンプレートのパラメータ定義に合わせてください（GET /v1/file/design/parameter/{designId}?version= で取得可能）。"
+}

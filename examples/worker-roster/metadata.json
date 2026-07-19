@@ -8,10 +8,17 @@
   "sourceDesignVersion": 1,
   "apiVersion": "v1",
   "apiEndpoint": "POST /v1/file/sync/single",
-  "envKeys": ["WORKER_ROSTER_DESIGN_ID", "WORKER_ROSTER_DESIGN_VERSION"],
-  "verificationPoints": ["\u5927\u91cf\u884c", "\u30c6\u30fc\u30d6\u30eb\u6539\u30da\u30fc\u30b8", "\u30d8\u30c3\u30c0\u884c\u306e\u7e70\u308a\u8fd4\u3057", "\u65e5\u672c\u8a9e\u8868\u793a"],
-  "expectedPages": 2,
-  "lastVerifiedAt": null,
-  "verifiedEnvironment": null,
-  "notes": "input.json の params キーは、複製したテンプレートのパラメータ定義に合わせてください（GET /v1/file/design/parameter/{designId}?version= で取得可能）。"
+  "envKeys": [
+    "WORKER_ROSTER_DESIGN_ID",
+    "WORKER_ROSTER_DESIGN_VERSION"
+  ],
+  "verificationPoints": [
+    "単一レコード",
+    "日付項目（生年月日・雇入れ年月日）",
+    "日本語表示"
+  ],
+  "expectedPages": 1,
+  "lastVerifiedAt": "2026-07-19",
+  "verifiedEnvironment": "本番 (https://api.re-port-flow.com/v1)",
+  "notes": "このテンプレートは労働者1名分のフラットな項目で構成されます（明細配列なし）。input.json の params は GET /v1/file/design/parameter/{designId} の定義に一致させています。"
 }

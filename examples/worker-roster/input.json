@@ -1,23 +1,13 @@
 {
-  "companyName": "株式会社サンプル商事",
-  "officeName": "本社",
-  "preparedDate": "2026-07-15",
-  "workers": [
-    { "no": 1, "name": "山田 太郎", "furigana": "ヤマダ タロウ", "gender": "男", "birthDate": "1985-04-12", "hireDate": "2010-04-01", "jobType": "営業", "address": "東京都世田谷区サンプル1-2-3" },
-    { "no": 2, "name": "佐藤 花子", "furigana": "サトウ ハナコ", "gender": "女", "birthDate": "1990-09-03", "hireDate": "2014-04-01", "jobType": "経理", "address": "東京都杉並区サンプル4-5-6" },
-    { "no": 3, "name": "鈴木 一郎", "furigana": "スズキ イチロウ", "gender": "男", "birthDate": "1978-01-25", "hireDate": "2005-10-01", "jobType": "開発", "address": "神奈川県横浜市港北区サンプル7-8-9" },
-    { "no": 4, "name": "高橋 美咲", "furigana": "タカハシ ミサキ", "gender": "女", "birthDate": "1993-12-18", "hireDate": "2017-04-01", "jobType": "デザイン", "address": "東京都中野区サンプル2-4-6" },
-    { "no": 5, "name": "田中 健太", "furigana": "タナカ ケンタ", "gender": "男", "birthDate": "1988-06-30", "hireDate": "2012-07-15", "jobType": "開発", "address": "埼玉県さいたま市大宮区サンプル3-3-3" },
-    { "no": 6, "name": "伊藤 由美", "furigana": "イトウ ユミ", "gender": "女", "birthDate": "1995-03-08", "hireDate": "2019-04-01", "jobType": "総務", "address": "東京都練馬区サンプル9-9-9" },
-    { "no": 7, "name": "渡辺 亮", "furigana": "ワタナベ リョウ", "gender": "男", "birthDate": "1982-11-11", "hireDate": "2008-04-01", "jobType": "営業", "address": "千葉県船橋市サンプル5-6-7" },
-    { "no": 8, "name": "中村 彩", "furigana": "ナカムラ アヤ", "gender": "女", "birthDate": "1991-07-22", "hireDate": "2015-10-01", "jobType": "マーケティング", "address": "東京都品川区サンプル8-1-2" },
-    { "no": 9, "name": "小林 大輔", "furigana": "コバヤシ ダイスケ", "gender": "男", "birthDate": "1986-02-14", "hireDate": "2011-04-01", "jobType": "開発", "address": "神奈川県川崎市中原区サンプル1-1-1" },
-    { "no": 10, "name": "加藤 麻衣", "furigana": "カトウ マイ", "gender": "女", "birthDate": "1997-08-05", "hireDate": "2021-04-01", "jobType": "デザイン", "address": "東京都目黒区サンプル6-6-6" },
-    { "no": 11, "name": "吉田 修", "furigana": "ヨシダ オサム", "gender": "男", "birthDate": "1975-05-19", "hireDate": "2003-04-01", "jobType": "管理", "address": "東京都大田区サンプル2-2-2" },
-    { "no": 12, "name": "山本 直子", "furigana": "ヤマモト ナオコ", "gender": "女", "birthDate": "1989-10-27", "hireDate": "2013-04-01", "jobType": "経理", "address": "東京都板橋区サンプル4-4-4" },
-    { "no": 13, "name": "松本 拓也", "furigana": "マツモト タクヤ", "gender": "男", "birthDate": "1994-01-09", "hireDate": "2018-07-01", "jobType": "開発", "address": "埼玉県川口市サンプル7-7-7" },
-    { "no": 14, "name": "井上 恵", "furigana": "イノウエ メグミ", "gender": "女", "birthDate": "1992-04-16", "hireDate": "2016-04-01", "jobType": "総務", "address": "東京都北区サンプル3-5-8" },
-    { "no": 15, "name": "木村 翔", "furigana": "キムラ ショウ", "gender": "男", "birthDate": "1998-11-02", "hireDate": "2022-04-01", "jobType": "営業", "address": "神奈川県相模原市サンプル9-2-4" },
-    { "no": 16, "name": "林 さくら", "furigana": "ハヤシ サクラ", "gender": "女", "birthDate": "1996-06-21", "hireDate": "2020-10-01", "jobType": "マーケティング", "address": "東京都江東区サンプル1-8-1" }
-  ]
+  "フリガナ": "ヤマダ タロウ",
+  "氏名": "山田 太郎",
+  "性別": "男",
+  "生年月日": "1985-04-12",
+  "郵便番号": "154-0001",
+  "住所": "東京都世田谷区サンプル1-2-3",
+  "従事する業務の種類": "営業",
+  "雇入れ年月日": "2010-04-01",
+  "退職又は死亡年月日": "",
+  "退職又は死亡事由": "",
+  "履歴": "2015-04 主任昇格 / 2020-04 課長昇格"
 }

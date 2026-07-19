@@ -10,7 +10,6 @@ const API_BASE = 'https://api.re-port-flow.com/v1'; // Re:port Flow 本番エン
 const exDir = path.resolve(__dirname, '..');            // examples/invoice
 const repoRoot = path.resolve(exDir, '..', '..');
 
-// .env を最小パース（KEY=VALUE 形式のみ）
 const envPath = path.join(repoRoot, '.env');
 if (fs.existsSync(envPath)) {
   for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
@@ -26,7 +25,7 @@ if (!designId) { console.error('テンプレート複製後の自分のデザイ
 const version = parseInt(process.env.INVOICE_DESIGN_VERSION || '1', 10);
 
 const params = JSON.parse(fs.readFileSync(path.join(exDir, 'input.json'), 'utf8'));
-const body = { designId, version, content: { fileName: 'invoice.pdf', params } };
+const body = { designId, version, content: { fileName: '請求書', params } };
 
 (async () => {
   const res = await fetch(`${API_BASE}/file/sync/single`, {

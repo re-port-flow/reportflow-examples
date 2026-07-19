@@ -1,10 +1,11 @@
 # 秘密保持誓約書 (nda)
 
-Re:port Flow の「秘密保持誓約書」テンプレートから PDF を生成するサンプルです。
+Re:port Flow の「秘密保持誓約書」テンプレートから PDF を生成するサンプルです。宛先・誓約者・代表者などの差込項目を差し込み、長文の条項本文と日本語表示を確認します。
 
-> ⚠️ **準備中**: 本番テンプレートギャラリーの「秘密保持誓約書」テンプレート（designId `0eO7ScC3XmMTVF68`）は現在、差込項目（パラメータ）が定義されておらず、生成される PDF が空になります。テンプレートに項目が追加され次第、実データの `input.json` と検証済み `output.pdf` を追加します。現状の `input.json` は空オブジェクト `{}` です。
-
+- **検証観点**: 差込項目（宛先・誓約者・代表者） / 長文の条項本文 / 日本語表示
+- **想定ページ数**: 1
 - **対応 API バージョン**: `v1`（`POST /v1/file/sync/single`）
+- 備考: このテンプレートは **version 2** で差込項目が定義されています（`NDA_DESIGN_VERSION=2`）。
 
 ## 手順
 
@@ -25,7 +26,7 @@ curl -s "https://api.re-port-flow.com/v1/file/designs" -H "appkey: $REPORTFLOW_A
 ```dotenv
 REPORTFLOW_API_KEY=ak_xxxxxxxxxxxxxxxx
 NDA_DESIGN_ID=（複製したデザインID）
-NDA_DESIGN_VERSION=1
+NDA_DESIGN_VERSION=2
 ```
 
 ### 4. 実行する
@@ -51,6 +52,6 @@ python3 scripts/python.py  # Python 3.8+
 
 ## 注意事項
 
-- `input.json` の各キーは **複製したテンプレートのパラメータ定義に合わせてください**。定義は `GET /v1/file/design/parameter/{designId}?version=1` で取得できます。
+- `input.json` の各キーは **複製したテンプレートのパラメータ定義に合わせてください**。定義は `GET /v1/file/design/parameter/{designId}?version=2` で取得できます。
 - 記載の値はすべてサンプルです。実データ・実在の個人／企業情報は含めていません。
 - `appkey` は秘密情報です。`.env` はコミットしないでください（`.gitignore` 済み）。

@@ -11,13 +11,13 @@ REPO_ROOT="$(cd "$EX_DIR/../.." && pwd)"
 
 : "${REPORTFLOW_API_KEY:?REPORTFLOW_API_KEY を .env に設定してください (ak_...)}"
 DESIGN_ID="${NDA_DESIGN_ID:?テンプレート複製後の自分のデザインIDを NDA_DESIGN_ID に設定してください}"
-VERSION="${NDA_DESIGN_VERSION:-1}"
+VERSION="${NDA_DESIGN_VERSION:-2}"
 
 # input.json = content.params。リクエストボディを組み立てて POST する。
 BODY="$(jq -n \
   --arg designId "$DESIGN_ID" \
   --argjson version "$VERSION" \
-  --arg fileName "nda.pdf" \
+  --arg fileName "秘密保持誓約書" \
   --slurpfile params "$EX_DIR/input.json" \
   '{designId: $designId, version: $version, content: {fileName: $fileName, params: $params[0]}}')"
 

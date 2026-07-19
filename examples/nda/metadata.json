@@ -5,16 +5,20 @@
   "templateSlug": "01KD4H4ERAJVC2EJD66JRN55W2",
   "templateGalleryUrl": "https://templates.re-port-flow.com/templates/01KD4H4ERAJVC2EJD66JRN55W2",
   "sourceDesignId": "0eO7ScC3XmMTVF68",
-  "sourceDesignVersion": 1,
+  "sourceDesignVersion": 2,
   "apiVersion": "v1",
   "apiEndpoint": "POST /v1/file/sync/single",
   "envKeys": [
     "NDA_DESIGN_ID",
     "NDA_DESIGN_VERSION"
   ],
-  "verificationPoints": [],
-  "expectedPages": null,
-  "lastVerifiedAt": null,
-  "verifiedEnvironment": null,
-  "notes": "【注意】本番ギャラリーの『秘密保持誓約書』テンプレート(designId 0eO7ScC3XmMTVF68)は差込項目が定義されておらず、生成PDFが空になります。テンプレート整備後に input.json と output.pdf を追加してください。"
+  "verificationPoints": [
+    "差込項目（宛先・誓約者・代表者）",
+    "長文の条項本文",
+    "日本語表示"
+  ],
+  "expectedPages": 1,
+  "lastVerifiedAt": "2026-07-19",
+  "verifiedEnvironment": "本番 (https://api.re-port-flow.com/v1)",
+  "notes": "このテンプレートは version 2 で差込項目が定義されています。params キーは GET /v1/file/design/parameter/{designId}?version=2 の定義に一致させています。"
 }

@@ -17,7 +17,7 @@ VERSION="${INVOICE_DESIGN_VERSION:-1}"
 BODY="$(jq -n \
   --arg designId "$DESIGN_ID" \
   --argjson version "$VERSION" \
-  --arg fileName "invoice.pdf" \
+  --arg fileName "請求書" \
   --slurpfile params "$EX_DIR/input.json" \
   '{designId: $designId, version: $version, content: {fileName: $fileName, params: $params[0]}}')"
 

@@ -17,7 +17,7 @@ VERSION="${WORKER_ROSTER_DESIGN_VERSION:-1}"
 BODY="$(jq -n \
   --arg designId "$DESIGN_ID" \
   --argjson version "$VERSION" \
-  --arg fileName "worker-roster.pdf" \
+  --arg fileName "労働者名簿" \
   --slurpfile params "$EX_DIR/input.json" \
   '{designId: $designId, version: $version, content: {fileName: $fileName, params: $params[0]}}')"
 

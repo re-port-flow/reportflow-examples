@@ -2,7 +2,7 @@
 
 Re:port Flow の「請求書」テンプレートから PDF を生成するサンプルです。
 
-- **検証観点**: 複数明細 / 消費税 10%・8% 混在 / 端数処理 / 日本語表示
+- **検証観点**: 複数明細 / 消費税計算 / 端数処理 / 日本語表示
 - **想定ページ数**: 1
 - **対応 API バージョン**: `v1`（`POST /v1/file/sync/single`）
 - **解説ページ**: [/examples/invoice](https://doc.re-port-flow.com/examples/invoice)

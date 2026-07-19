@@ -28,7 +28,7 @@ Re:port Flow の API を使って帳票 PDF を自動生成したい開発者・
 
 | サンプル | 帳票 | 主な検証観点 | 解説ページ |
 |---|---|---|---|
-| [invoice](examples/invoice/) | 請求書 | 複数明細 / 消費税10%・8%混在 / 端数処理 | [/examples/invoice](https://doc.re-port-flow.com/examples/invoice) |
+| [invoice](examples/invoice/) | 請求書 | 複数明細 / 消費税計算 / 端数処理 | [/examples/invoice](https://doc.re-port-flow.com/examples/invoice) |
 | [quotation](examples/quotation/) | 見積もり | 小計・消費税・合計 / 有効期限 / 備考の長文 | [/examples/quotation](https://doc.re-port-flow.com/examples/quotation) |
 | [invoice-en](examples/invoice-en/) | Invoice（英語） | 英数字 / 通貨 / 明細配列 | [/examples/invoice-en](https://doc.re-port-flow.com/examples/invoice-en) |
 | [worker-roster](examples/worker-roster/) | 労働者名簿 | 単一レコード / 日付項目 | [/examples/worker-roster](https://doc.re-port-flow.com/examples/worker-roster) |
@@ -77,8 +77,8 @@ curl -X POST https://api.re-port-flow.com/v1/file/sync/single \
     "designId": "（複製したデザインID）",
     "version": 1,
     "content": {
-      "fileName": "invoice.pdf",
-      "params": { "invoiceNumber": "INV-2026-0001", "total": 475018 }
+      "fileName": "請求書",
+      "params": { "請求書番号": "INV-2026-0042", "合計金額": 442200 }
     }
   }' \
   --output invoice.pdf

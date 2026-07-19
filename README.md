@@ -5,6 +5,7 @@
 Re:port Flow 公式サンプル集 — テンプレートを複製し、入力データ JSON と API 実行例を使って完成 PDF を追試できる帳票サンプルの実装集です。
 
 - **Re:port Flow**: <https://re-port-flow.com>
+- **サンプル集（Webで閲覧）**: <https://doc.re-port-flow.com/examples>
 - **テンプレートギャラリー**: <https://templates.re-port-flow.com>
 - **API ドキュメント**: <https://doc.re-port-flow.com>
 
@@ -25,13 +26,13 @@ Re:port Flow の API を使って帳票 PDF を自動生成したい開発者・
 
 ## サンプル一覧
 
-| サンプル | 帳票 | 主な検証観点 |
-|---|---|---|
-| [invoice](examples/invoice/) | 請求書 | 複数明細 / 消費税10%・8%混在 / 端数処理 |
-| [quotation](examples/quotation/) | 見積もり | 小計・消費税・合計 / 有効期限 / 備考の長文 |
-| [invoice-en](examples/invoice-en/) | Invoice（英語） | 英数字 / 通貨(USD) / 日英混在 |
-| [worker-roster](examples/worker-roster/) | 労働者名簿 | 大量行 / テーブル改ページ / ヘッダ繰り返し |
-| [nda](examples/nda/) | 秘密保持誓約書 | 長文 / 複数条項 / 改ページ / 差込 |
+| サンプル | 帳票 | 主な検証観点 | 解説ページ |
+|---|---|---|---|
+| [invoice](examples/invoice/) | 請求書 | 複数明細 / 消費税10%・8%混在 / 端数処理 | [/examples/invoice](https://doc.re-port-flow.com/examples/invoice) |
+| [quotation](examples/quotation/) | 見積もり | 小計・消費税・合計 / 有効期限 / 備考の長文 | [/examples/quotation](https://doc.re-port-flow.com/examples/quotation) |
+| [invoice-en](examples/invoice-en/) | Invoice（英語） | 英数字 / 通貨 / 明細配列 | [/examples/invoice-en](https://doc.re-port-flow.com/examples/invoice-en) |
+| [worker-roster](examples/worker-roster/) | 労働者名簿 | 単一レコード / 日付項目 | [/examples/worker-roster](https://doc.re-port-flow.com/examples/worker-roster) |
+| [nda](examples/nda/) | 秘密保持誓約書 | 差込項目 / 長文の条項 | [/examples/nda](https://doc.re-port-flow.com/examples/nda) |
 
 ## 全体の流れ
 

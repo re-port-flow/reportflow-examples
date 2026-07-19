@@ -5,6 +5,7 @@ Re:port Flow の「Invoice (English)」テンプレートから PDF を生成す
 - **検証観点**: 英数字表示 / 通貨(USD)フォーマット / 日英混在 / 小数点以下2桁
 - **想定ページ数**: 1
 - **対応 API バージョン**: `v1`（`POST /v1/file/sync/single`）
+- **解説ページ**: [/examples/invoice-en](https://doc.re-port-flow.com/examples/invoice-en)
 
 ## 手順
 

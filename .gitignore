@@ -1,0 +1,22 @@
+# 秘密情報（絶対にコミットしない）
+.env
+.env.local
+*.pem
+*.key
+
+# 実行時に生成される出力（検証済み output.pdf はコミット対象なので除外しない）
+/tmp/
+*.log
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# 依存関係
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/

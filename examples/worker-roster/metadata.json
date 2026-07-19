@@ -1,0 +1,24 @@
+{
+  "reportType": "worker-roster",
+  "title": "労働者名簿",
+  "category": "hr",
+  "templateSlug": "01K1X116H10VNP0GD5684VDB3Y",
+  "templateGalleryUrl": "https://templates.re-port-flow.com/templates/01K1X116H10VNP0GD5684VDB3Y",
+  "sourceDesignId": "0eP3LhG2UwC7ZebE",
+  "sourceDesignVersion": 1,
+  "apiVersion": "v1",
+  "apiEndpoint": "POST /v1/file/sync/single",
+  "envKeys": [
+    "WORKER_ROSTER_DESIGN_ID",
+    "WORKER_ROSTER_DESIGN_VERSION"
+  ],
+  "verificationPoints": [
+    "単一レコード",
+    "日付項目（生年月日・雇入れ年月日）",
+    "日本語表示"
+  ],
+  "expectedPages": 1,
+  "lastVerifiedAt": "2026-07-19",
+  "verifiedEnvironment": "本番 (https://api.re-port-flow.com/v1)",
+  "notes": "このテンプレートは労働者1名分のフラットな項目で構成されます（明細配列なし）。input.json の params は GET /v1/file/design/parameter/{designId} の定義に一致させています。"
+}

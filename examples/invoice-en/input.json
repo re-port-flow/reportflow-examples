@@ -1,0 +1,16 @@
+{
+  "InvoiceNumber": "INV-0eDdGXRm2U8eBuRq",
+  "IssueDate": "2026-01-01 12:00:00",
+  "BillToName": "ABC.Inc",
+  "PersonInCharge": "Tom",
+  "Address": "x-x-x ◯ street NewYork",
+  "TEL": "00-0000-0000",
+  "SubTotal": 6480,
+  "Tax": 648,
+  "Acmount": 7128,
+  "Detail": [
+    { "No": 1, "Item": "ItemA", "Quantity": 1, "Unit": 4980, "Amount": 5460, "Tax": 498 },
+    { "No": 2, "Item": "ItemB", "Quantity": 3, "Unit": 500, "Amount": 1650, "Tax": 150 }
+  ],
+  "Note": "Nothing"
+}

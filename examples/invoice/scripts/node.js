@@ -5,6 +5,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+const API_BASE = 'https://api.re-port-flow.com/v1'; // Re:port Flow 本番エンドポイント（固定）
+
 const exDir = path.resolve(__dirname, '..');            // examples/invoice
 const repoRoot = path.resolve(exDir, '..', '..');
 
@@ -19,7 +21,6 @@ if (fs.existsSync(envPath)) {
 
 const apiKey = process.env.REPORTFLOW_API_KEY;
 if (!apiKey) { console.error('REPORTFLOW_API_KEY を .env に設定してください (ak_...)'); process.exit(1); }
-const baseUrl = process.env.REPORTFLOW_API_BASE_URL || 'https://api.re-port-flow.com/v1';
 const designId = process.env.INVOICE_DESIGN_ID;
 if (!designId) { console.error('テンプレート複製後の自分のデザインIDを INVOICE_DESIGN_ID に設定してください'); process.exit(1); }
 const version = parseInt(process.env.INVOICE_DESIGN_VERSION || '1', 10);
@@ -28,13 +29,15 @@ const params = JSON.parse(fs.readFileSync(path.join(exDir, 'input.json'), 'utf8'
 const body = { designId, version, content: { fileName: 'invoice.pdf', params } };
 
 (async () => {
-  const res = await fetch(`${baseUrl}/file/sync/single`, {
+  const res = await fetch(`${API_BASE}/file/sync/single`, {
     method: 'POST',
     headers: { appkey: apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) {
-    console.error(`APIエラー: ${res.status} ${res.statusText}`);
+  const ctype = res.headers.get('content-type') || '';
+  if (!res.ok || !ctype.includes('application/pdf')) {
+    console.error(`✗ 生成に失敗しました (HTTP ${res.status}, ${ctype})`);
+    console.error('--- レスポンス ---');
     console.error(await res.text());
     process.exit(1);
   }

@@ -8,6 +8,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+API_BASE = "https://api.re-port-flow.com/v1"  # Re:port Flow 本番エンドポイント（固定）
+
 ex_dir = Path(__file__).resolve().parent.parent          # examples/worker-roster
 repo_root = ex_dir.parent.parent
 
@@ -24,7 +26,6 @@ if env_path.exists():
 api_key = os.environ.get("REPORTFLOW_API_KEY")
 if not api_key:
     sys.exit("REPORTFLOW_API_KEY を .env に設定してください (ak_...)")
-base_url = os.environ.get("REPORTFLOW_API_BASE_URL", "https://api.re-port-flow.com/v1")
 design_id = os.environ.get("WORKER_ROSTER_DESIGN_ID")
 if not design_id:
     sys.exit("テンプレート複製後の自分のデザインIDを WORKER_ROSTER_DESIGN_ID に設定してください")
@@ -35,15 +36,19 @@ body = {"designId": design_id, "version": version,
         "content": {"fileName": "worker-roster.pdf", "params": params}}
 
 req = urllib.request.Request(
-    f"{base_url}/file/sync/single",
+    f"{API_BASE}/file/sync/single",
     data=json.dumps(body).encode("utf-8"),
     headers={"appkey": api_key, "Content-Type": "application/json"},
     method="POST",
 )
 try:
     with urllib.request.urlopen(req, timeout=130) as res:
+        ctype = res.headers.get("Content-Type", "")
+        data = res.read()
+        if "application/pdf" not in ctype:
+            sys.exit(f"✗ 生成に失敗しました (予期しない応答: {ctype})\n{data.decode('utf-8', 'replace')}")
         out = ex_dir / "output.pdf"
-        out.write_bytes(res.read())
+        out.write_bytes(data)
         print(f"✓ {out} を生成しました")
 except urllib.error.HTTPError as e:
-    sys.exit(f"APIエラー: {e.code} {e.reason}\n{e.read().decode('utf-8', 'replace')}")
+    sys.exit(f"✗ 生成に失敗しました (HTTP {e.code} {e.reason})\n{e.read().decode('utf-8', 'replace')}")

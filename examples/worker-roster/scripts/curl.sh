@@ -3,12 +3,13 @@
 # 依存: bash, curl, jq
 set -euo pipefail
 
+API_BASE="https://api.re-port-flow.com/v1"   # Re:port Flow 本番エンドポイント（固定）
+
 EX_DIR="$(cd "$(dirname "$0")/.." && pwd)"       # examples/worker-roster
-REPO_ROOT="$(cd "$EX_DIR/../.." && pwd)"          # リポジトリルート
+REPO_ROOT="$(cd "$EX_DIR/../.." && pwd)"
 [ -f "$REPO_ROOT/.env" ] && { set -a; . "$REPO_ROOT/.env"; set +a; }
 
 : "${REPORTFLOW_API_KEY:?REPORTFLOW_API_KEY を .env に設定してください (ak_...)}"
-BASE_URL="${REPORTFLOW_API_BASE_URL:-https://api.re-port-flow.com/v1}"
 DESIGN_ID="${WORKER_ROSTER_DESIGN_ID:?テンプレート複製後の自分のデザインIDを WORKER_ROSTER_DESIGN_ID に設定してください}"
 VERSION="${WORKER_ROSTER_DESIGN_VERSION:-1}"
 
@@ -20,10 +21,23 @@ BODY="$(jq -n \
   --slurpfile params "$EX_DIR/input.json" \
   '{designId: $designId, version: $version, content: {fileName: $fileName, params: $params[0]}}')"
 
-curl -sS -X POST "$BASE_URL/file/sync/single" \
+# 応答を一時ファイルに受け、HTTPステータスとContent-Typeで成否を判定する
+TMP="$(mktemp)"
+STATUS="$(curl -sS -X POST "$API_BASE/file/sync/single" \
   -H "appkey: $REPORTFLOW_API_KEY" \
   -H "Content-Type: application/json" \
   -d "$BODY" \
-  --output "$EX_DIR/output.pdf"
+  -o "$TMP" -w '%{http_code};%{content_type}')"
+CODE="${STATUS%%;*}"
+CTYPE="${STATUS#*;}"
 
-echo "✓ $EX_DIR/output.pdf を生成しました"
+if { [ "$CODE" = "200" ] || [ "$CODE" = "201" ]; } && printf '%s' "$CTYPE" | grep -qi '^application/pdf'; then
+  mv "$TMP" "$EX_DIR/output.pdf"
+  echo "✓ $EX_DIR/output.pdf を生成しました"
+else
+  echo "✗ 生成に失敗しました (HTTP $CODE, $CTYPE)" >&2
+  echo "--- レスポンス ---" >&2
+  cat "$TMP" >&2; echo >&2
+  rm -f "$TMP"
+  exit 1
+fi

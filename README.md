@@ -120,7 +120,7 @@ cd examples/invoice && ./scripts/curl.sh
 ## 対応 API バージョン
 
 - Re:port Flow API: **`v1`**
-- ベースURL: `https://api.re-port-flow.com/v1`（ステージング: `https://api.stg.re-port-flow.com/v1`）
+- ベースURL: `https://api.re-port-flow.com/v1`（固定。設定不要）
 
 バージョン・検証情報の詳細は [docs/compatibility.md](docs/compatibility.md) を参照してください。
 

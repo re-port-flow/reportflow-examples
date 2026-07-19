@@ -5,8 +5,7 @@
 | 項目 | 値 |
 |---|---|
 | API バージョン | `v1` |
-| 本番ベースURL | `https://api.re-port-flow.com/v1` |
-| ステージングベースURL | `https://api.stg.re-port-flow.com/v1` |
+| ベースURL | `https://api.re-port-flow.com/v1`（固定） |
 | 認証ヘッダ | `appkey: ak_...` |
 
 各サンプルが対応する API バージョンは、それぞれの `metadata.json` の `apiVersion` に記載しています。
@@ -15,9 +14,9 @@
 
 | 用途 | メソッド + パス | レスポンス |
 |---|---|---|
-| 単一PDF（同期） | `POST /v1/file/sync/single` | `200` + PDF バイナリを直接返却 |
+| 単一PDF（同期） | `POST /v1/file/sync/single` | `201` + PDF バイナリを直接返却 |
 | 単一PDF（非同期） | `POST /v1/file/async/single` | `202` + JSON（`requestId`, `url`, `files`） |
-| 複数PDF（同期・ZIP） | `POST /v1/file/sync/multiple` | `200` + ZIP バイナリ |
+| 複数PDF（同期・ZIP） | `POST /v1/file/sync/multiple` | `201` + ZIP バイナリ |
 | 複数PDF（非同期・ZIP） | `POST /v1/file/async/multiple` | `202` + JSON |
 | ダウンロード（ZIP一括） | `GET /v1/file/download/{requestId}` | `200` + ZIP |
 | ダウンロード（個別） | `GET /v1/file/download/{requestId}/{fileId}` | `200` + PDF |

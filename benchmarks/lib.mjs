@@ -214,16 +214,15 @@ export function normalizeScenarios(config, overrides = {}) {
       `consecutiveFailureLimit は 1 以上の整数（受け取った値: ${config.consecutiveFailureLimit}）`,
     );
   }
-  // 件数の上限。2026-08-06 の実測で 20〜50 件のバッチを連続実行したところ、
-  // サーバー側のメモリが積み上がってコンテナが OOM で停止し、API が約 2 分止まった。
-  // 既定より大きい件数を測りたい場合は、自分の環境の容量を確認したうえで
-  // この上限を上げること（method.md §5-10）。
+  // 件数の上限。本番環境は他の利用者と共有しているため、大きいバッチを繰り返し投げると
+  // 自分の測定のために他の利用者の生成を遅らせることになる。レート上限を守っていれば
+  // 負荷をかけないとは限らない（method.md §5-10）。
   const overLimit = config.scenarios.filter((s) => (s.batchSize ?? 1) > (config.maxBatchSize ?? 5));
   if (overLimit.length > 0) {
     throw new Error(
       `batchSize が maxBatchSize (${config.maxBatchSize ?? 5}) を超えています: ` +
         `${overLimit.map((s) => `${s.id}=${s.batchSize}`).join(', ')}。` +
-        'サーバー側の OOM を招くおそれがあります（method.md §5-10）。意図的に測る場合は設定の maxBatchSize を上げてください。',
+        '共有基盤に負荷をかけるおそれがあります（method.md §5-10）。意図的に測る場合は設定の maxBatchSize を上げてください。',
     );
   }
   const seen = new Set();
@@ -304,14 +303,14 @@ export function estimateFloorSeconds(config, scenarios) {
  * 非同期の完了時刻として、どの観測を採るかを決める。
  *
  * 完了確認は「配列末尾のファイルを監視 → 200 になったら残りを 1 巡して全件確認」の順で行う
- * （生成が配列順・同時実行 5 のチャンクなので、末尾が最後のチャンクに入る）。
+ * （生成はおおむね配列順に進むため、末尾がいちばん遅く仕上がりやすい）。
  * 1 巡ぶんのリクエストはダウンロードのレート上限に合わせて 750ms 間隔で回るため、
  * その時間を完了時間に足すと**測定側のペーシングを製品の遅さとして計上してしまう**
  * （50 件なら 1 巡だけで 37 秒）。よって基準は最初の確認（＝末尾ファイル）の時刻。
  *
  * 例外は、1 巡の途中で 404 を観測したファイル。それは本当にまだ生成中だったので、
  * そのファイルが 200 になった時刻へ更新する（末尾が最後に終わるとは限らない —
- * 最終チャンク内では最大 5 件が並行しており、順序は保証されない）。
+ * 内部では複数ファイルが並行処理されており、完了順は保証されない）。
  *
  * @param {number|null} current 現在の完了時刻（未確定なら null）
  * @param {number} observedMs 今回 200 を観測した時刻

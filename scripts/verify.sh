@@ -3,7 +3,9 @@
 #   - 各サンプルに必須ファイルが揃っているか
 #   - input.json / metadata.json が正しい JSON か
 #   - metadata.json に必須キーが含まれるか
-# API を実行して PDF を生成する検証ではない（それは scripts/generate*.sh）。
+#   - benchmarks/ の集計ロジックの単体テスト（node --test）
+# API を実行して PDF を生成する検証ではない（それは scripts/generate*.sh と
+# benchmarks/run.mjs）。
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -54,6 +56,19 @@ for d in "${examples[@]}"; do
     done
   fi
 done
+
+# ベンチマーク（benchmarks/）。集計・失敗判定が黙って壊れると誤った数値をそのまま
+# 公開ページに載せることになるので、CI で毎回通す。node が無い環境ではスキップする。
+echo "▶ benchmarks"
+if command -v node >/dev/null 2>&1; then
+  node --test "$REPO_ROOT/benchmarks/lib.test.mjs" >/dev/null 2>&1 ||
+    note "benchmarks: 単体テストが失敗しました（詳細は node --test benchmarks/lib.test.mjs）"
+  # --dry-run は API を呼ばない。設定ファイルの検証と実行計画の組み立てまでを通す。
+  node "$REPO_ROOT/benchmarks/run.mjs" --dry-run >/dev/null 2>&1 ||
+    note "benchmarks: run.mjs --dry-run が失敗しました"
+else
+  echo "  - node が無いためスキップ"
+fi
 
 echo "==================================================="
 if [ "$errors" -eq 0 ]; then

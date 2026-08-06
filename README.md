@@ -118,6 +118,23 @@ cd examples/invoice && ./scripts/curl.sh
      -H "appkey: $REPORTFLOW_API_KEY"
    ```
 
+## ベンチマーク（PDF 生成の所要時間）
+
+同期・非同期エンドポイントの所要時間を、明細行数・件数を変えて計測し、中央値・P95・失敗件数を
+集計するベンチマークを [benchmarks/](benchmarks/) に用意しています。**自分のワークスペースで
+追試できる**ことを目的にしており、測定条件・統計の定義・測れていないことをすべて明記しています。
+
+```bash
+node benchmarks/run.mjs --dry-run   # API を呼ばず、生成されるファイル数だけ確認
+```
+
+- [benchmarks/README.md](benchmarks/README.md) — 実行手順
+- [benchmarks/method.md](benchmarks/method.md) — 測定仕様（条件・統計・失敗判定・制限事項）
+- 公開されている測定結果: <https://lp.re-port-flow.com/benchmarks/>
+
+> 実行すると本番環境で実際に PDF が生成され、プランの作成回数・従量課金の対象になります。
+> 必ず `--dry-run` で件数を確認してから実行してください。
+
 ## 対応 API バージョン
 
 - Re:port Flow API: **`v1`**

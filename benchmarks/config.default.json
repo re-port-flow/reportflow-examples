@@ -1,0 +1,105 @@
+{
+  "$comment": "公開用マトリクス。条件と統計の定義は benchmarks/method.md を一次情報とする。実行前に必ず `node benchmarks/run.mjs --dry-run` で生成ファイル数を確認すること。件数（batchSize）を 5 より大きくしないこと — 2026-08-06 の実測で、20〜50 件のバッチを連続実行したところサーバー側のメモリが積み上がり、コンテナが OOM で停止して API 全体が約 2 分停止した（method.md §5-10）。",
+  "apiBase": "https://api.re-port-flow.com/v1",
+  "apiVersion": "v1",
+
+  "iterations": 20,
+  "warmupIterations": 2,
+
+  "syncRequestTimeoutMs": 130000,
+  "downloadRequestTimeoutMs": 60000,
+  "asyncCompletionTimeoutMs": 900000,
+  "pollIntervalMs": 1000,
+
+  "rateLimits": {
+    "syncPerMin": 30,
+    "asyncPerMin": 100,
+    "downloadPerMin": 100
+  },
+  "rateLimitUtilization": 0.8,
+  "maxRateLimitRetries": 3,
+  "fallbackRetryAfterMs": 60000,
+  "consecutiveFailureLimit": 3,
+  "maxBatchSize": 5,
+
+  "template": {
+    "name": "請求書",
+    "galleryUrl": "https://templates.re-port-flow.com/templates/0eUPGyiGX8uzwE8L",
+    "sampleDir": "examples/invoice"
+  },
+  "env": {
+    "apiKeyVar": "REPORTFLOW_API_KEY",
+    "designIdVar": "INVOICE_DESIGN_ID",
+    "designVersionVar": "INVOICE_DESIGN_VERSION"
+  },
+
+  "payload": {
+    "file": "benchmarks/payloads/invoice.json",
+    "lineItemsKey": "明細",
+    "fileNamePrefix": "bench",
+    "totals": {
+      "amountKey": "金額",
+      "subtotalKey": "小計",
+      "taxKey": "消費税",
+      "totalKey": "合計金額",
+      "taxRate": 0.1
+    }
+  },
+
+  "scenarios": [
+    {
+      "id": "sync-single-r5",
+      "label": "同期・単一・明細5行",
+      "endpoint": "sync/single",
+      "lineItems": 5
+    },
+    {
+      "id": "sync-single-r50",
+      "label": "同期・単一・明細50行",
+      "endpoint": "sync/single",
+      "lineItems": 50
+    },
+    {
+      "id": "sync-single-r200",
+      "label": "同期・単一・明細200行",
+      "endpoint": "sync/single",
+      "lineItems": 200
+    },
+    {
+      "id": "async-single-r5",
+      "label": "非同期・単一・明細5行",
+      "endpoint": "async/single",
+      "lineItems": 5
+    },
+    {
+      "id": "async-single-r50",
+      "label": "非同期・単一・明細50行",
+      "endpoint": "async/single",
+      "lineItems": 50
+    },
+    {
+      "id": "async-single-r200",
+      "label": "非同期・単一・明細200行",
+      "endpoint": "async/single",
+      "lineItems": 200
+    },
+    {
+      "id": "sync-multiple-r5-b5",
+      "label": "同期・複数5件・明細5行",
+      "endpoint": "sync/multiple",
+      "lineItems": 5,
+      "batchSize": 5,
+      "iterations": 10,
+      "warmupIterations": 1
+    },
+    {
+      "id": "async-multiple-r5-b5",
+      "label": "非同期・複数5件・明細5行",
+      "endpoint": "async/multiple",
+      "lineItems": 5,
+      "batchSize": 5,
+      "iterations": 10,
+      "warmupIterations": 1
+    }
+  ]
+}

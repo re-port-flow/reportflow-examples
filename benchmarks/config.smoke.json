@@ -1,0 +1,70 @@
+{
+  "$comment": "疎通確認用の最小構成。4 エンドポイントを 3 試行ずつ通すだけで、統計としては使えない（P95 は最大値と一致する）。公開する数値は config.default.json で取ること。",
+  "apiBase": "https://api.re-port-flow.com/v1",
+  "apiVersion": "v1",
+  "iterations": 3,
+  "warmupIterations": 1,
+  "syncRequestTimeoutMs": 130000,
+  "downloadRequestTimeoutMs": 60000,
+  "asyncCompletionTimeoutMs": 300000,
+  "pollIntervalMs": 1000,
+  "rateLimits": {
+    "syncPerMin": 30,
+    "asyncPerMin": 100,
+    "downloadPerMin": 100
+  },
+  "rateLimitUtilization": 0.8,
+  "maxRateLimitRetries": 3,
+  "fallbackRetryAfterMs": 60000,
+  "consecutiveFailureLimit": 3,
+  "template": {
+    "name": "請求書",
+    "galleryUrl": "https://templates.re-port-flow.com/templates/0eUPGyiGX8uzwE8L",
+    "sampleDir": "examples/invoice"
+  },
+  "env": {
+    "apiKeyVar": "REPORTFLOW_API_KEY",
+    "designIdVar": "INVOICE_DESIGN_ID",
+    "designVersionVar": "INVOICE_DESIGN_VERSION"
+  },
+  "payload": {
+    "file": "benchmarks/payloads/invoice.json",
+    "lineItemsKey": "明細",
+    "fileNamePrefix": "smoke",
+    "totals": {
+      "amountKey": "金額",
+      "subtotalKey": "小計",
+      "taxKey": "消費税",
+      "totalKey": "合計金額",
+      "taxRate": 0.1
+    }
+  },
+  "scenarios": [
+    {
+      "id": "sync-single-r5",
+      "label": "同期・単一・明細5行",
+      "endpoint": "sync/single",
+      "lineItems": 5
+    },
+    {
+      "id": "async-single-r5",
+      "label": "非同期・単一・明細5行",
+      "endpoint": "async/single",
+      "lineItems": 5
+    },
+    {
+      "id": "sync-multiple-r5-b3",
+      "label": "同期・複数3件・明細5行",
+      "endpoint": "sync/multiple",
+      "lineItems": 5,
+      "batchSize": 3
+    },
+    {
+      "id": "async-multiple-r5-b3",
+      "label": "非同期・複数3件・明細5行",
+      "endpoint": "async/multiple",
+      "lineItems": 5,
+      "batchSize": 3
+    }
+  ]
+}

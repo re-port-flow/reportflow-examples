@@ -1,5 +1,5 @@
 /**
- * benchmarks/lib.mjs の単体テスト（依存なし・`node --test benchmarks/` で実行）。
+ * benchmarks/lib.mjs の単体テスト（依存なし・`node --test benchmarks/*.test.mjs` で実行）。
  *
  * 集計や失敗判定が黙って壊れると、誤った数値をそのまま公開ページに載せることになる。
  * ここで固定するのは method.md に書いた定義そのもの。
@@ -357,14 +357,14 @@ describe('非同期の完了時刻の決め方', () => {
 
   it('掃引で回る残りのファイルではペーシング待ちを足さない', () => {
     // 末尾が 5000ms で 200 → 残り 2 件を 750ms 間隔で確認（5750 / 6500）。
-    // どちらも 404 を見ていない＝既に生成済みなので、完了時刻は 5000ms のまま。
+    // どちらも 409 FILE_NOT_READY を見ていない＝既に生成済みなので、完了時刻は 5000ms のまま。
     let completion = pickCompletionMs(null, 5000, false);
     completion = pickCompletionMs(completion, 5750, false);
     completion = pickCompletionMs(completion, 6500, false);
     assert.equal(completion, 5000);
   });
 
-  it('掃引中に 404 を見たファイルがあればその確認時刻へ更新する', () => {
+  it('掃引中に 409 FILE_NOT_READY を見たファイルがあればその確認時刻へ更新する', () => {
     // 最終チャンク内は最大 5 件が並行するので、末尾が最後に終わるとは限らない。
     let completion = pickCompletionMs(null, 5000, false);
     completion = pickCompletionMs(completion, 7200, true);
@@ -387,7 +387,7 @@ describe('失敗の集計', () => {
 });
 
 describe('同梱の設定ファイル', () => {
-  for (const name of ['config.default.json', 'config.smoke.json']) {
+  for (const name of ['config.default.json', 'config.smoke.json', 'config.public-2026-10-28.json']) {
     it(`${name} は正しい JSON で、検証を通る`, async () => {
       const config = JSON.parse(await readFile(resolve(BENCHMARK_DIR, name), 'utf8'));
       const scenarios = normalizeScenarios(config);

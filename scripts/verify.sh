@@ -61,8 +61,8 @@ done
 # 公開ページに載せることになるので、CI で毎回通す。node が無い環境ではスキップする。
 echo "▶ benchmarks"
 if command -v node >/dev/null 2>&1; then
-  node --test "$REPO_ROOT/benchmarks/lib.test.mjs" >/dev/null 2>&1 ||
-    note "benchmarks: 単体テストが失敗しました（詳細は node --test benchmarks/lib.test.mjs）"
+  node --test "$REPO_ROOT"/benchmarks/*.test.mjs >/dev/null 2>&1 ||
+    note "benchmarks: 単体テストが失敗しました（詳細は node --test benchmarks/*.test.mjs）"
   # --dry-run は API を呼ばない。設定ファイルの検証と実行計画の組み立てまでを通す。
   node "$REPO_ROOT/benchmarks/run.mjs" --dry-run >/dev/null 2>&1 ||
     note "benchmarks: run.mjs --dry-run が失敗しました"

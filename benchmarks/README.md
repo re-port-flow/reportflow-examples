@@ -184,3 +184,24 @@ node --test benchmarks/*.test.mjs
 | `HTTP 5xx` が続く | サーバー側が応答できない状態。`consecutiveFailureLimit` に達すると自動で中断する。しばらく置いて再実行する（件数の上限を上げていた場合は既定へ戻す） |
 
 その他のエラーは [docs/troubleshooting.md](../docs/troubleshooting.md) を参照してください。
+
+### 2026-10-28 の掲載見合わせ記録
+
+`results/attempts/2026-10-28-aborted.json` は途中停止した集計であり、**公開性能値として採用しない**。
+同期3条件の後、非同期のウォームアップで現行の生成待ち応答（409 FILE_NOT_READY）を
+旧ハーネスが失敗扱いしたため停止した。ウォームアップ失敗は集計の failures には含まれないが、
+`abortedEarly: true` が実行全体の不採用を示す。成功条件だけを抜き出して比較に使わない。
+
+`config.public-2026-10-28.json` は当該実行の設定を再現する公開用設定で、
+入力JSONのパスだけをリポジトリ相対にしたもの。既定との差分は生成・完了期限60秒、
+429再送なし、連続失敗1回で停止。所在地・回線は未申告で、測定仕様の申告条件を満たさない。
+集計JSONは実行出力を無編集で保存している。現行ハーネスでは409 FILE_NOT_READYのみ待機し、
+404・422・他の409は失敗扱いとする。再実行は実行者が環境・件数・費用・停止条件を確認して行う。
+
+```sh
+node benchmarks/run.mjs --config benchmarks/config.public-2026-10-28.json --dry-run
+```
+
+上記は計画確認のみで生成しない。実行する場合は `--dry-run` を外し、
+`--max-duration-ms 1800000` とリポジトリ外の `--evidence-out` を指定する。
+これはサービスの監視や生成経路照合を代行しない。

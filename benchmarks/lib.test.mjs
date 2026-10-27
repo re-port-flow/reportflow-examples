@@ -387,7 +387,7 @@ describe('失敗の集計', () => {
 });
 
 describe('同梱の設定ファイル', () => {
-  for (const name of ['config.default.json', 'config.smoke.json']) {
+  for (const name of ['config.default.json', 'config.smoke.json', 'config.public-2026-10-28.json']) {
     it(`${name} は正しい JSON で、検証を通る`, async () => {
       const config = JSON.parse(await readFile(resolve(BENCHMARK_DIR, name), 'utf8'));
       const scenarios = normalizeScenarios(config);

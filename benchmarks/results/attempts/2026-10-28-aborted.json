@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "v1",
+  "apiBase": "https://api.re-port-flow.com/v1",
+  "startedAt": "2026-10-27T20:02:24.949Z",
+  "finishedAt": "2026-10-27T20:05:31.049Z",
+  "abortedEarly": true,
+  "template": {
+    "name": "請求書",
+    "galleryUrl": "https://templates.re-port-flow.com/templates/0eUPGyiGX8uzwE8L",
+    "sampleDir": "examples/invoice"
+  },
+  "designRef": "ac63fb730f94",
+  "designVersion": 1,
+  "client": {
+    "node": "v22.23.4",
+    "platform": "darwin",
+    "arch": "arm64",
+    "location": "未申告",
+    "network": "未申告"
+  },
+  "config": {
+    "iterations": 20,
+    "warmupIterations": 2,
+    "concurrency": 1,
+    "pollIntervalMs": 1000,
+    "syncRequestTimeoutMs": 60000,
+    "asyncCompletionTimeoutMs": 60000,
+    "rateLimits": {
+      "syncPerMin": 30,
+      "asyncPerMin": 100,
+      "downloadPerMin": 100
+    },
+    "rateLimitUtilization": 0.8,
+    "statistics": {
+      "median": "中央値（偶数標本は中央2値の平均）",
+      "p95": "最近傍順位法（ceil(0.95n) 番目）",
+      "minIterationsForP95": 20
+    }
+  },
+  "scenarios": [
+    {
+      "aborted": false,
+      "id": "sync-single-r5",
+      "label": "同期・単一・明細5行",
+      "endpoint": "sync/single",
+      "lineItems": 5,
+      "batchSize": 1,
+      "iterations": 20,
+      "warmupIterations": 2,
+      "pageCount": 1,
+      "pageCountObserved": [
+        1
+      ],
+      "pageCountMethod": "type-page+count-agree",
+      "outputBytesMedian": 48554,
+      "latencyMs": {
+        "samples": 20,
+        "median": 2388.7,
+        "p95": 2770.5,
+        "min": 2050,
+        "max": 2783.7,
+        "mean": 2400.9
+      },
+      "acceptedMs": null,
+      "failures": {
+        "total": 0,
+        "byReason": {},
+        "detail": []
+      },
+      "rateLimited": 0
+    },
+    {
+      "aborted": false,
+      "id": "sync-single-r50",
+      "label": "同期・単一・明細50行",
+      "endpoint": "sync/single",
+      "lineItems": 50,
+      "batchSize": 1,
+      "iterations": 20,
+      "warmupIterations": 2,
+      "pageCount": 3,
+      "pageCountObserved": [
+        3
+      ],
+      "pageCountMethod": "type-page+count-agree",
+      "outputBytesMedian": 90983,
+      "latencyMs": {
+        "samples": 20,
+        "median": 2399.8,
+        "p95": 2774.6,
+        "min": 2113.6,
+        "max": 4569.6,
+        "mean": 2552.9
+      },
+      "acceptedMs": null,
+      "failures": {
+        "total": 0,
+        "byReason": {},
+        "detail": []
+      },
+      "rateLimited": 0
+    },
+    {
+      "aborted": false,
+      "id": "sync-single-r200",
+      "label": "同期・単一・明細200行",
+      "endpoint": "sync/single",
+      "lineItems": 200,
+      "batchSize": 1,
+      "iterations": 20,
+      "warmupIterations": 2,
+      "pageCount": 9,
+      "pageCountObserved": [
+        9
+      ],
+      "pageCountMethod": "type-page+count-agree",
+      "outputBytesMedian": 247536,
+      "latencyMs": {
+        "samples": 20,
+        "median": 3080.1,
+        "p95": 3603.2,
+        "min": 2817.9,
+        "max": 3954.1,
+        "mean": 3142.3
+      },
+      "acceptedMs": null,
+      "failures": {
+        "total": 0,
+        "byReason": {},
+        "detail": []
+      },
+      "rateLimited": 0
+    },
+    {
+      "aborted": true,
+      "id": "async-single-r5",
+      "label": "非同期・単一・明細5行",
+      "endpoint": "async/single",
+      "lineItems": 5,
+      "batchSize": 1,
+      "iterations": 20,
+      "warmupIterations": 2,
+      "pageCount": null,
+      "pageCountObserved": [],
+      "pageCountMethod": "",
+      "outputBytesMedian": null,
+      "latencyMs": {
+        "samples": 0,
+        "median": null,
+        "p95": null,
+        "min": null,
+        "max": null,
+        "mean": null
+      },
+      "acceptedMs": null,
+      "failures": {
+        "total": 0,
+        "byReason": {},
+        "detail": []
+      },
+      "rateLimited": 0
+    }
+  ]
+}

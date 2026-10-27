@@ -308,13 +308,13 @@ export function estimateFloorSeconds(config, scenarios) {
  * その時間を完了時間に足すと**測定側のペーシングを製品の遅さとして計上してしまう**
  * （50 件なら 1 巡だけで 37 秒）。よって基準は最初の確認（＝末尾ファイル）の時刻。
  *
- * 例外は、1 巡の途中で 404 を観測したファイル。それは本当にまだ生成中だったので、
+ * 例外は、1 巡の途中で 409 FILE_NOT_READY を観測したファイル。それは本当にまだ生成中だったので、
  * そのファイルが 200 になった時刻へ更新する（末尾が最後に終わるとは限らない —
  * 内部では複数ファイルが並行処理されており、完了順は保証されない）。
  *
  * @param {number|null} current 現在の完了時刻（未確定なら null）
  * @param {number} observedMs 今回 200 を観測した時刻
- * @param {boolean} waited このファイルで 404（生成中）を観測していたか
+ * @param {boolean} waited このファイルで 409 FILE_NOT_READY（生成中）を観測していたか
  */
 export function pickCompletionMs(current, observedMs, waited) {
   return current === null || waited ? observedMs : current;

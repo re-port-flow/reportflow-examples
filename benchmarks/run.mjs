@@ -318,7 +318,7 @@ async function runAsyncIteration(ctx, scenario, body) {
 /**
  * 非同期の完了を検知する。
  *
- * `GET /file/download/{requestId}/{fileId}` は生成中 404、完了後 200 を返す。
+ * `GET /file/download/{requestId}/{fileId}` は生成中 409 FILE_NOT_READY、完了後 200 を返す。
  * `contents` はおおむね配列順に処理され、各ファイルは生成し終えた時点で個別に取得可能になる。
  * したがって末尾がいちばん遅く仕上がりやすいので、まず末尾を監視し、200 になってから
  * 残りを逆順に 1 巡して全件を確認する。毎回全件を叩くと、ダウンロードのレート上限
@@ -330,7 +330,7 @@ async function runAsyncIteration(ctx, scenario, body) {
  * **完了時刻の基準は「配列末尾のファイルが 200 になった時点」**。掃引で回る残りの
  * ファイルは既に生成済みなので、こちらのペーシング（ダウンロード 750ms 間隔）で
  * 掛かった時間を完了時間に足してはいけない。50 件のバッチなら掃引だけで 37 秒あり、
- * それをそのまま計上すると完了時間が実態の数倍になる。掃引中に 404 を見た
+ * それをそのまま計上すると完了時間が実態の数倍になる。掃引中に 409 FILE_NOT_READY を見た
  * （＝本当にまだ生成中だった）ファイルがあった場合だけ、その確認時刻へ更新する。
  * 完了順は保証されないので、この 1 巡が順序の前提が崩れた場合の取りこぼしを拾う。
  */
@@ -338,7 +338,7 @@ async function waitForCompletion(ctx, { requestId, files, startedAt }) {
   const remaining = files.map((f) => f.fileId).reverse();
   const firstFileId = files[0].fileId;
   const deadlineAt = startedAt + ctx.config.asyncCompletionTimeoutMs;
-  /** 404（生成中）を実際に観測したファイル。掃引で待たされた証拠になる。 */
+  /** 409 FILE_NOT_READY（生成中）を実際に観測したファイル。掃引で待たされた証拠になる。 */
   const waitedFor = new Set();
   let completionMs = null;
   let outputBytes = null;
@@ -366,16 +366,23 @@ async function waitForCompletion(ctx, { requestId, files, startedAt }) {
       return { ok: false, reason: classifyThrown(error), detail: String(error?.message ?? error) };
     }
 
-    if (res.status === 404) {
-      await discardBody(res);
+    if (res.status === 409) {
+      // Only the documented pending response is pollable; other conflicts fail closed.
+      const pending = await res.json().catch(() => null);
+      if (pending?.code !== 'FILE_NOT_READY') {
+        return { ok: false, reason: FAILURE.HTTP_ERROR, detail: 'download HTTP 409 (not FILE_NOT_READY)' };
+      }
       waitedFor.add(fileId);
-      await sleep(ctx.config.pollIntervalMs);
+      await sleep(Math.max(ctx.config.pollIntervalMs, retryAfterMs(res, ctx.config.pollIntervalMs)));
       continue;
     }
     if (res.status === 429) {
       await discardBody(res);
       ctx.counters.rateLimited += 1;
       rateLimited = true;
+      if (ctx.config.maxRateLimitRetries === 0) {
+        return { ok: false, reason: FAILURE.RATE_LIMIT_EXHAUSTED, detail: 'download HTTP 429 (retry disabled)' };
+      }
       await sleep(retryAfterMs(res, ctx.config.fallbackRetryAfterMs));
       continue;
     }

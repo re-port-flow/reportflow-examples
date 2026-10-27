@@ -46,6 +46,7 @@ describe('openEvidence', () => {
 async function runFixture(mode, options = {}) {
   const dir = await mkdtemp(resolve(tmpdir(), 'benchmark-run-'));
   let posts = 0;
+  let downloads = 0;
   const server = createServer((req, res) => {
     req.resume();
     if (req.method === 'POST') posts++;
@@ -57,10 +58,18 @@ async function runFixture(mode, options = {}) {
       res.end(JSON.stringify({ requestId: 'request-1', files: [{ fileId: 'file-1' }] }));
       return;
     }
-    if (mode === 'async' && req.method === 'POST') {
+    if ((mode === 'async' || mode.startsWith('pending-')) && req.method === 'POST') {
       res.writeHead(202, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ requestId: 'request-1', files: [{ fileId: 'file-1', url: 'https://secret.invalid' }] }));
       return;
+    }
+    if (mode.startsWith('pending-') && req.method === 'GET') {
+      downloads++;
+      if (downloads === 1) {
+        const status = mode === 'pending-ok' || mode === 'pending-conflict' ? 409 : Number(mode.slice(8));
+        res.writeHead(status, { 'content-type': 'application/json', 'retry-after': '0' });
+        res.end(JSON.stringify({ code: mode === 'pending-ok' ? 'FILE_NOT_READY' : 'OTHER' })); return;
+      }
     }
     res.writeHead(200, { 'request-id': 'request-1', 'x-file-mapping': encodeURIComponent(JSON.stringify([{ fileId: 'file-1', url: 'secret' }])) });
     res.end('%PDF-1.7 /Type /Pages /Count 1 /Type /Page');
@@ -69,7 +78,8 @@ async function runFixture(mode, options = {}) {
   try {
     const config = JSON.parse(await readFile(resolve(root, 'benchmarks/config.smoke.json'), 'utf8'));
     config.apiBase = `http://127.0.0.1:${server.address().port}/v1`;
-    config.scenarios = [{ id: 'fixture', endpoint: mode === 'async' || mode === 'bad-status' ? 'async/single' : 'sync/single', lineItems: 5 }];
+    config.scenarios = [{ id: 'fixture', endpoint: mode === 'async' || mode === 'bad-status' || mode.startsWith('pending-') ? 'async/single' : 'sync/single', lineItems: 5 }];
+    config.pollIntervalMs = 10;
     config.iterations = options.iterations ?? 1;
     config.warmupIterations = options.warmup ?? 0;
     config.consecutiveFailureLimit = 1;
@@ -98,7 +108,7 @@ async function runFixture(mode, options = {}) {
     const report = JSON.parse(await readFile(output, 'utf8'));
     const rawEvents = await readFile(journal, 'utf8').catch(() => '');
     const events = rawEvents.trim() ? rawEvents.trim().split('\n').map(JSON.parse) : [];
-    return { code, report, events, posts, stdout, stderr };
+    return { code, report, events, posts, downloads, stdout, stderr };
   } finally { server.closeAllConnections(); await new Promise((r) => server.close(r)); await rm(dir, { recursive: true, force: true }); }
 }
 
@@ -168,4 +178,19 @@ describe('runner private evidence and stopping (local HTTP only)', () => {
     assert.equal(r.report.abortedEarly, true);
     assert.equal(r.events.at(-1).abortedEarly, true);
   });
+});
+
+describe('current download pending contract (local HTTP only)', () => {
+  it('polls only 409 FILE_NOT_READY without another generation POST', async () => {
+    const r = await runFixture('pending-ok');
+    assert.equal(r.code, 0, r.stderr); assert.equal(r.posts, 1); assert.equal(r.downloads, 2);
+    assert.equal(r.report.scenarios[0].latencyMs.samples, 1);
+  });
+  for (const mode of ['pending-conflict', 'pending-404', 'pending-422', 'pending-429']) {
+    it(`${mode} stops without retrying or generating again`, async () => {
+      const r = await runFixture(mode);
+      assert.equal(r.code, 2, r.stderr); assert.equal(r.posts, 1); assert.equal(r.downloads, 1);
+      assert.equal(r.report.abortedEarly, true);
+    });
+  }
 });

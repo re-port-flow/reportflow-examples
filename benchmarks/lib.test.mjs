@@ -357,14 +357,14 @@ describe('非同期の完了時刻の決め方', () => {
 
   it('掃引で回る残りのファイルではペーシング待ちを足さない', () => {
     // 末尾が 5000ms で 200 → 残り 2 件を 750ms 間隔で確認（5750 / 6500）。
-    // どちらも 404 を見ていない＝既に生成済みなので、完了時刻は 5000ms のまま。
+    // どちらも 409 FILE_NOT_READY を見ていない＝既に生成済みなので、完了時刻は 5000ms のまま。
     let completion = pickCompletionMs(null, 5000, false);
     completion = pickCompletionMs(completion, 5750, false);
     completion = pickCompletionMs(completion, 6500, false);
     assert.equal(completion, 5000);
   });
 
-  it('掃引中に 404 を見たファイルがあればその確認時刻へ更新する', () => {
+  it('掃引中に 409 FILE_NOT_READY を見たファイルがあればその確認時刻へ更新する', () => {
     // 最終チャンク内は最大 5 件が並行するので、末尾が最後に終わるとは限らない。
     let completion = pickCompletionMs(null, 5000, false);
     completion = pickCompletionMs(completion, 7200, true);

@@ -1,5 +1,5 @@
 /**
- * benchmarks/lib.mjs の単体テスト（依存なし・`node --test benchmarks/` で実行）。
+ * benchmarks/lib.mjs の単体テスト（依存なし・`node --test benchmarks/*.test.mjs` で実行）。
  *
  * 集計や失敗判定が黙って壊れると、誤った数値をそのまま公開ページに載せることになる。
  * ここで固定するのは method.md に書いた定義そのもの。

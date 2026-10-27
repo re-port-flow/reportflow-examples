@@ -20,12 +20,14 @@
  *   node benchmarks/run.mjs --config benchmarks/config.smoke.json
  *   node benchmarks/run.mjs --scenario sync-single-r5 --iterations 5
  */
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, open, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import process from 'node:process';
+import { setTimeout as delay } from 'node:timers/promises';
+import { openEvidence, responseIdentity } from './evidence.mjs';
 
 import {
   FAILURE,
@@ -49,7 +51,9 @@ import {
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '..');
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let runSignal;
+const sleep = (ms) => delay(ms, undefined, { signal: runSignal });
+const requestSignal = (ms) => runSignal ? AbortSignal.any([runSignal, AbortSignal.timeout(ms)]) : AbortSignal.timeout(ms);
 
 // ---------------------------------------------------------------------------
 // 入力（.env / 引数）
@@ -180,15 +184,15 @@ function postGenerate(ctx, scenario, body) {
         method: 'POST',
         headers: { appkey: ctx.apiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(ctx.config.syncRequestTimeoutMs),
+        signal: requestSignal(ctx.config.syncRequestTimeoutMs),
       }),
     ctx.rateLimitOptions,
   );
 }
 
 async function readErrorDetail(response) {
-  const text = await response.text().catch(() => '');
-  return `HTTP ${response.status} ${text.slice(0, 300)}`.trim();
+  await discardBody(response);
+  return `HTTP ${response.status}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,6 +204,7 @@ async function runSyncIteration(ctx, scenario, body) {
   const isMultiple = scenario.endpoint.endsWith('/multiple');
   await ctx.pacers.sync();
 
+  ctx.measurementStartedAt = new Date().toISOString();
   const startedAt = performance.now();
   let response;
   let rateLimited = false;
@@ -217,6 +222,7 @@ async function runSyncIteration(ctx, scenario, body) {
     return { ok: false, reason: FAILURE.HTTP_ERROR, detail: await readErrorDetail(response) };
   }
 
+  ctx.identity = responseIdentity(response);
   let buffer;
   try {
     buffer = Buffer.from(await response.arrayBuffer());
@@ -253,6 +259,7 @@ async function runSyncIteration(ctx, scenario, body) {
 async function runAsyncIteration(ctx, scenario, body) {
   await ctx.pacers.async();
 
+  ctx.measurementStartedAt = new Date().toISOString();
   const startedAt = performance.now();
   let response;
   let rateLimited = false;
@@ -270,6 +277,10 @@ async function runAsyncIteration(ctx, scenario, body) {
     return { ok: false, reason: FAILURE.HTTP_ERROR, detail: await readErrorDetail(response) };
   }
 
+  if (response.status !== 202) {
+    await discardBody(response);
+    return { ok: false, reason: FAILURE.INVALID_BODY, detail: 'Expected HTTP 202' };
+  }
   let accepted;
   try {
     accepted = await response.json();
@@ -283,10 +294,11 @@ async function runAsyncIteration(ctx, scenario, body) {
     return {
       ok: false,
       reason: FAILURE.INVALID_BODY,
-      detail: `202 の files が ${files.length} 件（期待 ${scenario.batchSize} 件）/ requestId=${accepted?.requestId}`,
+      detail: `202 の識別子またはfiles件数が不正（期待 ${scenario.batchSize} 件）`,
     };
   }
 
+  ctx.identity = responseIdentity(response, accepted);
   const completion = await waitForCompletion(ctx, { requestId: accepted.requestId, files, startedAt });
   if (!completion.ok) return { ok: false, reason: completion.reason, detail: completion.detail };
 
@@ -348,7 +360,7 @@ async function waitForCompletion(ctx, { requestId, files, startedAt }) {
     try {
       res = await fetch(`${ctx.apiBase}/file/download/${requestId}/${fileId}`, {
         headers: { appkey: ctx.apiKey },
-        signal: AbortSignal.timeout(ctx.config.downloadRequestTimeoutMs),
+        signal: requestSignal(ctx.config.downloadRequestTimeoutMs),
       });
     } catch (error) {
       return { ok: false, reason: classifyThrown(error), detail: String(error?.message ?? error) };
@@ -441,9 +453,29 @@ async function runScenario(ctx, scenario) {
       iterationLabel: `${ctx.runToken}-${label}`,
     });
 
-    const result = isAsync
-      ? await runAsyncIteration(ctx, scenario, body)
-      : await runSyncIteration(ctx, scenario, body);
+    if (runSignal?.aborted) { aborted = true; break; }
+    const trialStartedAt = new Date().toISOString();
+    ctx.trial = { runId: ctx.runToken, conditionId: scenario.id, iteration: label, warmup: isWarmup };
+    ctx.identity = { requestId: null, fileIds: [] };
+    ctx.measurementStartedAt = null;
+    const rateLimitedStart = ctx.counters.rateLimited;
+    await ctx.journal?.write({ type: 'trial_start', ...ctx.trial, scheduledAt: trialStartedAt,
+      endpoint: scenario.endpoint, lineItems: scenario.lineItems, batchSize: scenario.batchSize });
+    let result;
+    try {
+      result = isAsync ? await runAsyncIteration(ctx, scenario, body) : await runSyncIteration(ctx, scenario, body);
+    } catch (error) {
+      result = { ok: false, reason: classifyThrown(error), detail: 'Trial interrupted or could not complete' };
+    }
+    await ctx.journal?.write({ type: 'trial_end', ...ctx.trial, startedAt: ctx.measurementStartedAt, scheduledAt: trialStartedAt,
+      finishedAt: new Date().toISOString(), ...ctx.identity, ok: result.ok,
+      reason: result.reason ?? null, latencyMs: result.latencyMs ?? null,
+      acceptedMs: result.acceptedMs ?? null, pageCount: result.pageCount ?? null,
+      pageCountMethod: result.pageCountMethod ?? null, outputBytes: result.outputBytes ?? null,
+      rateLimited: ctx.counters.rateLimited - rateLimitedStart,
+      statisticsCandidate: result.ok && !result.rateLimited && !isWarmup && !runSignal?.aborted,
+      route: 'unverified' });
+    if (runSignal?.aborted) aborted = true;
 
     console.log(
       `  ${scenario.id} ${isWarmup ? '(warmup) ' : ''}${label}: ` +
@@ -481,6 +513,7 @@ async function runScenario(ctx, scenario) {
     // 429 で待ち直した試行は、Retry-After の待機（既定 60 秒）がそのまま計測値に
     // 乗るので標本にしない。失敗でもないので rateLimited の件数だけに残る
     // （method.md §3「リトライの扱い」）。
+    if (aborted) break;
     if (result.rateLimited) continue;
 
     latencies.push(result.latencyMs);
@@ -539,137 +572,173 @@ function printPlan(config, scenarios) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
-  await loadDotEnv(resolve(REPO_ROOT, '.env'));
-
-  const configPath = resolveFromRepo(args.values.get('config') ?? 'benchmarks/config.default.json');
-  const config = JSON.parse(await readFile(configPath, 'utf8'));
-
-  let scenarios = normalizeScenarios(config, {
-    iterations: readIntOption(args, 'iterations'),
-    warmup: readIntOption(args, 'warmup'),
-  });
-  const only = args.values.get('scenario');
-  if (only) {
-    scenarios = scenarios.filter((s) => s.id === only);
-    if (scenarios.length === 0) throw new Error(`--scenario ${only} に一致するシナリオがありません`);
-  }
-
-  console.log(`設定: ${configPath}`);
-  printPlan(config, scenarios);
-
-  if (args.flags.has('dry-run')) {
-    console.log('\n--dry-run のため API は呼び出していません。');
-    return;
-  }
-
-  const apiKey = process.env[config.env.apiKeyVar];
-  const designId = process.env[config.env.designIdVar];
-  const designVersion = Number(process.env[config.env.designVersionVar] ?? 1);
-  if (!apiKey) {
-    throw new Error(`${config.env.apiKeyVar} が未設定です（.env に ak_... を設定してください）`);
-  }
-  if (!designId) {
-    throw new Error(
-      `${config.env.designIdVar} が未設定です（${config.template.galleryUrl} を自分のワークスペースへ複製し、そのデザインIDを設定してください）`,
-    );
-  }
-
-  const payloadTemplate = JSON.parse(await readFile(resolveFromRepo(config.payload.file), 'utf8'));
-  const startedAt = new Date().toISOString();
-  const utilization = config.rateLimitUtilization;
-
-  const counters = { rateLimited: 0 };
-  const ctx = {
-    apiBase: config.apiBase,
-    apiKey,
-    design: { id: designId, version: designVersion },
-    config,
-    payload: { ...config.payload, template: payloadTemplate },
-    // 実行ごとに変えて、ワークスペース上でどの実行の生成物か見分けられるようにする。
-    runToken: startedAt.replaceAll(/[-:.TZ]/g, '').slice(0, 14),
-    pacers: {
-      sync: createPacer(intervalMsFor(config.rateLimits.syncPerMin, utilization)),
-      async: createPacer(intervalMsFor(config.rateLimits.asyncPerMin, utilization)),
-      download: createPacer(intervalMsFor(config.rateLimits.downloadPerMin, utilization)),
-    },
-    rateLimitOptions: {
-      maxRateLimitRetries: config.maxRateLimitRetries,
-      fallbackRetryAfterMs: config.fallbackRetryAfterMs,
-      onRateLimited: () => {
-        counters.rateLimited += 1;
-      },
-    },
-    counters,
-  };
-
-  console.log('');
-  const results = [];
-  let abortedEarly = false;
-  for (const scenario of scenarios) {
-    console.log(`▶ ${scenario.id}（${scenario.endpoint} / 明細 ${scenario.lineItems} 行 / ${scenario.batchSize} 件）`);
-    const result = await runScenario(ctx, scenario);
-    results.push(result);
-    // 1 シナリオが連続失敗で中断したら、残りのシナリオも実行しない。
-    // 途中までの結果は書き出す（何がどこまで測れたかを残すため）。
-    if (result.aborted) {
-      abortedEarly = true;
-      console.log('連続失敗のため、残りのシナリオを実行せずに中断しました。');
-      break;
+  let journal;
+  let reportFile;
+  let timer;
+  const controller = new AbortController();
+  const stop = () => controller.abort();
+  try {
+    const args = parseArgs(process.argv.slice(2));
+    for (const name of ['config', 'out', 'scenario', 'iterations', 'warmup', 'evidence-out', 'max-duration-ms']) {
+      if (args.flags.has(name)) throw new Error(`--${name} requires a value`);
     }
-  }
+    await loadDotEnv(resolve(REPO_ROOT, '.env'));
 
-  const report = {
-    schemaVersion: RESULT_SCHEMA_VERSION,
-    apiVersion: config.apiVersion,
-    apiBase: config.apiBase,
-    startedAt,
-    finishedAt: new Date().toISOString(),
-    // 連続失敗で打ち切ったかどうか。true の結果は全条件を測り切れていないので、
-    // 公開値として扱ってはいけない。
-    abortedEarly,
-    template: config.template,
-    // デザインIDはワークスペース固有の識別子なのでそのままは公開しない。
-    // 同じデザインで測ったことだけ照合できるよう短いハッシュにする。
-    designRef: createHash('sha256').update(`${designId}:${designVersion}`).digest('hex').slice(0, 12),
-    designVersion,
-    client: {
-      node: process.version,
-      platform: process.platform,
-      arch: process.arch,
-      // 測定元の所在地・回線はレイテンシに直接効くので必ず添える。自動判定できないため
-      // 環境変数から受け取り、未設定なら「未申告」と残す（推測で埋めない）。
-      location: process.env.BENCHMARK_CLIENT_LOCATION ?? '未申告',
-      network: process.env.BENCHMARK_CLIENT_NETWORK ?? '未申告',
-    },
-    config: {
-      iterations: config.iterations,
-      warmupIterations: config.warmupIterations,
-      concurrency: 1,
-      pollIntervalMs: config.pollIntervalMs,
-      syncRequestTimeoutMs: config.syncRequestTimeoutMs,
-      asyncCompletionTimeoutMs: config.asyncCompletionTimeoutMs,
-      rateLimits: config.rateLimits,
-      rateLimitUtilization: config.rateLimitUtilization,
-      statistics: {
-        median: '中央値（偶数標本は中央2値の平均）',
-        p95: '最近傍順位法（ceil(0.95n) 番目）',
-        minIterationsForP95: MIN_ITERATIONS_FOR_P95,
+    const configPath = resolveFromRepo(args.values.get('config') ?? 'benchmarks/config.default.json');
+    const config = JSON.parse(await readFile(configPath, 'utf8'));
+
+    let scenarios = normalizeScenarios(config, {
+      iterations: readIntOption(args, 'iterations'),
+      warmup: readIntOption(args, 'warmup'),
+    });
+    const only = args.values.get('scenario');
+    if (only) {
+      scenarios = scenarios.filter((s) => s.id === only);
+      if (scenarios.length === 0) throw new Error(`--scenario ${only} に一致するシナリオがありません`);
+    }
+
+    console.log(`設定: ${configPath}`);
+    printPlan(config, scenarios);
+
+    if (args.flags.has('dry-run')) {
+      console.log('\n--dry-run のため API は呼び出していません。');
+      return;
+    }
+
+    const apiKey = process.env[config.env.apiKeyVar];
+    const designId = process.env[config.env.designIdVar];
+    const designVersion = Number(process.env[config.env.designVersionVar] ?? 1);
+    if (!apiKey) {
+      throw new Error(`${config.env.apiKeyVar} が未設定です（.env に ak_... を設定してください）`);
+    }
+    if (!designId) {
+      throw new Error(
+        `${config.env.designIdVar} が未設定です（${config.template.galleryUrl} を自分のワークスペースへ複製し、そのデザインIDを設定してください）`,
+      );
+    }
+
+    const duration = readIntOption(args, 'max-duration-ms');
+    if (duration !== undefined && (duration < 1 || duration > 2147483647)) {
+      throw new Error('--max-duration-ms must be 1..2147483647');
+    }
+    runSignal = controller.signal;
+    process.on('SIGINT', stop);
+    process.on('SIGTERM', stop);
+    if (duration !== undefined) timer = setTimeout(stop, duration);
+    const outPath = resolveFromRepo(args.values.get('out') ?? `benchmarks/results/${new Date().toISOString().slice(0, 10)}.json`);
+    await mkdir(dirname(outPath), { recursive: true });
+    reportFile = await open(outPath, 'wx', 0o600);
+    const runId = randomUUID();
+    if (args.values.has('evidence-out')) journal = await openEvidence(args.values.get('evidence-out'), REPO_ROOT);
+    const payloadTemplate = JSON.parse(await readFile(resolveFromRepo(config.payload.file), 'utf8'));
+    const startedAt = new Date().toISOString();
+    const utilization = config.rateLimitUtilization;
+
+    const counters = { rateLimited: 0 };
+    const ctx = {
+      apiBase: config.apiBase,
+      apiKey,
+      design: { id: designId, version: designVersion },
+      config,
+      payload: { ...config.payload, template: payloadTemplate },
+      // 実行ごとに変えて、ワークスペース上でどの実行の生成物か見分けられるようにする。
+      runToken: runId,
+      journal,
+      pacers: {
+        sync: createPacer(intervalMsFor(config.rateLimits.syncPerMin, utilization)),
+        async: createPacer(intervalMsFor(config.rateLimits.asyncPerMin, utilization)),
+        download: createPacer(intervalMsFor(config.rateLimits.downloadPerMin, utilization)),
       },
-    },
-    scenarios: results,
-  };
+      rateLimitOptions: {
+        maxRateLimitRetries: config.maxRateLimitRetries,
+        fallbackRetryAfterMs: config.fallbackRetryAfterMs,
+        onRateLimited: () => {
+          counters.rateLimited += 1;
+        },
+      },
+      counters,
+    };
 
-  const outPath = resolveFromRepo(
-    args.values.get('out') ?? `benchmarks/results/${startedAt.slice(0, 10)}.json`,
-  );
-  await mkdir(dirname(outPath), { recursive: true });
-  await writeFile(outPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-  console.log(`\n結果を書き出しました: ${outPath}`);
+    await journal?.write({ type: 'run_start', runId, startedAt,
+      configSha256: createHash('sha256').update(await readFile(configPath)).digest('hex'),
+      payloadSha256: createHash('sha256').update(await readFile(resolveFromRepo(config.payload.file))).digest('hex'),
+      runnerSha256: createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex'),
+      librarySha256: createHash('sha256').update(await readFile(resolve(SCRIPT_DIR, 'lib.mjs'))).digest('hex'),
+      evidenceSha256: createHash('sha256').update(await readFile(resolve(SCRIPT_DIR, 'evidence.mjs'))).digest('hex'),
+      plan: buildPlan(scenarios), maxDurationMs: duration ?? null });
+    console.log('');
+    const results = [];
+    let abortedEarly = false;
+    for (const scenario of scenarios) {
+      console.log(`▶ ${scenario.id}（${scenario.endpoint} / 明細 ${scenario.lineItems} 行 / ${scenario.batchSize} 件）`);
+      if (runSignal.aborted) { abortedEarly = true; break; }
+      const result = await runScenario(ctx, scenario);
+      results.push(result);
+      // 1 シナリオが連続失敗で中断したら、残りのシナリオも実行しない。
+      // 途中までの結果は書き出す（何がどこまで測れたかを残すため）。
+      if (result.aborted) {
+        abortedEarly = true;
+        console.log('連続失敗のため、残りのシナリオを実行せずに中断しました。');
+        break;
+      }
+    }
 
-  const failed = results.reduce((sum, r) => sum + r.failures.total, 0);
-  if (failed > 0) {
-    console.log(`失敗 ${failed} 件（内訳は結果 JSON の scenarios[].failures を参照）`);
+    const report = {
+      schemaVersion: RESULT_SCHEMA_VERSION,
+      apiVersion: config.apiVersion,
+      apiBase: config.apiBase,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      // 連続失敗で打ち切ったかどうか。true の結果は全条件を測り切れていないので、
+      // 公開値として扱ってはいけない。
+      abortedEarly: abortedEarly || runSignal.aborted,
+      template: config.template,
+      // デザインIDはワークスペース固有の識別子なのでそのままは公開しない。
+      // 同じデザインで測ったことだけ照合できるよう短いハッシュにする。
+      designRef: createHash('sha256').update(`${designId}:${designVersion}`).digest('hex').slice(0, 12),
+      designVersion,
+      client: {
+        node: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        // 測定元の所在地・回線はレイテンシに直接効くので必ず添える。自動判定できないため
+        // 環境変数から受け取り、未設定なら「未申告」と残す（推測で埋めない）。
+        location: process.env.BENCHMARK_CLIENT_LOCATION ?? '未申告',
+        network: process.env.BENCHMARK_CLIENT_NETWORK ?? '未申告',
+      },
+      config: {
+        iterations: config.iterations,
+        warmupIterations: config.warmupIterations,
+        concurrency: 1,
+        pollIntervalMs: config.pollIntervalMs,
+        syncRequestTimeoutMs: config.syncRequestTimeoutMs,
+        asyncCompletionTimeoutMs: config.asyncCompletionTimeoutMs,
+        rateLimits: config.rateLimits,
+        rateLimitUtilization: config.rateLimitUtilization,
+        statistics: {
+          median: '中央値（偶数標本は中央2値の平均）',
+          p95: '最近傍順位法（ceil(0.95n) 番目）',
+          minIterationsForP95: MIN_ITERATIONS_FOR_P95,
+        },
+      },
+      scenarios: results,
+    };
+
+    await reportFile.writeFile(`${JSON.stringify(report, null, 2)}\n`, 'utf8');
+    await reportFile.sync();
+    console.log(`\n結果を書き出しました: ${outPath}`);
+
+    await journal?.write({ type: 'run_end', runId, finishedAt: report.finishedAt, abortedEarly: report.abortedEarly });
+    if (report.abortedEarly) process.exitCode = 2;
+    const failed = results.reduce((sum, r) => sum + r.failures.total, 0);
+    if (failed > 0) {
+      console.log(`失敗 ${failed} 件（内訳は結果 JSON の scenarios[].failures を参照）`);
+    }
+  } finally {
+    clearTimeout(timer);
+    process.off('SIGINT', stop);
+    process.off('SIGTERM', stop);
+    try { await journal?.close(); } finally { await reportFile?.close(); }
   }
 }
 
